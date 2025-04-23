@@ -7,3 +7,6 @@
 !pixel_pal.py
 !pets.db
 !img/
+!db_manager.py
+!img/*
+!main.py
