@@ -29,7 +29,7 @@ git clone URL_ADDRESSgit clone https://github.com/yourusername/PixelPal.git
 4. 运行应用：
 
 ```bash
-python main.py
+python pixel_pal.py
 ```
 
 ## 🏗️ 项目结构
