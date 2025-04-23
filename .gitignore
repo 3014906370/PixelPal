@@ -9,4 +9,6 @@
 !img/
 !db_manager.py
 !img/*
+!img/**/
+!img/**/*
 !main.py
