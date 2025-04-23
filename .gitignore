@@ -1,0 +1,9 @@
+# 忽略所有文件
+*
+
+# 只包含需要的文件
+!.gitignore
+!manager.py
+!pixel_pal.py
+!pets.db
+!img/
