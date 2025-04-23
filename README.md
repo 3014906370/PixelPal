@@ -1,4 +1,4 @@
-# PixelPal - 桌面像素宠物伴侣
+# 像素小伴（PixelPal） - 桌面像素宠物伴侣
 
 ![项目图标](img/icon.png)
 
