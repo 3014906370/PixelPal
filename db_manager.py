@@ -1,9 +1,24 @@
 import sqlite3
 from pathlib import Path
-
+import sys
+import os
+# 数据库操作类，用于管理宠物的信息，包括添加、删除、查询等操作。
+# 该类使用 SQLite 数据库来存储宠物的信息，包括名称、帧目录等。
+# 该类的作用是提供一个统一的接口，用于操作宠物的信息，方便其他模块调用。
+# 该类的方法包括：  
+#   - init_db: 初始化数据库，创建 pets 表。
+#   - add_pet: 添加宠物信息，包括名称和帧目录。
+#   - delete_pet: 删除宠物信息，根据名称删除。
+#   - get_all_pets: 获取所有宠物信息，返回一个字典，键为名称，值为帧目录。
+#   - get_pet: 获取指定名称的宠物信息，返回帧目录。
+#   - update_pet: 更新宠物信息，根据名称更新帧目录。        
 class PetDB:
     def __init__(self):
-        self.db_path = "pets.db"
+        # 修改为使用绝对路径或打包后的相对路径
+        if getattr(sys, 'frozen', False):
+            self.db_path = os.path.join(sys._MEIPASS, 'pets.db')
+        else:
+            self.db_path = "pets.db"
         self.init_db()
         
     def init_db(self):

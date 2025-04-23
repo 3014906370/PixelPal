@@ -6,6 +6,35 @@ from PyQt5.QtWidgets import (QApplication, QWidget, QLabel, QMenu,
 from PyQt5.QtGui import QPixmap, QMovie, QIcon  # Added QIcon to imports
 from PyQt5.QtCore import Qt, QTimer, QPoint
 from db_manager import PetDB
+# 该类的作用是提供一个主窗口，用于显示宠物的动画。
+# 该类的方法包括：
+#   - initUI: 初始化窗口，设置窗口标题、样式、透明背景等。
+#   - initPet: 初始化宠物信息，从数据库中获取所有宠物信息，并设置当前宠物。
+#   - initTray: 初始化系统托盘，添加菜单和图标。
+#   - initMovement: 初始化宠物的移动和方向。
+#   - initAnimation: 初始化宠物的动画，从当前宠物的帧目录中获取所有图片，并设置定时器。
+#   - updateFrame: 更新当前帧，从当前宠物的帧目录中获取所有图片，并设置定时器。
+#   - changePet: 切换宠物，根据名称切换当前宠物，并更新动画。
+#   - showMenu: 显示菜单，添加菜单选项，包括切换宠物、退出程序等。
+#   - showTrayIcon: 显示系统托盘图标，添加菜单选项，包括切换宠物、退出程序等。
+#   - mousePressEvent: 鼠标按下事件，用于拖动窗口。
+#   - mouseMoveEvent: 鼠标移动事件，用于拖动窗口。
+#   - randomDirection: 随机改变宠物的移动方向。
+#   - movePet: 处理宠物的移动，根据当前方向和速度移动宠物。
+#   - changeDir: 改变宠物的移动方向，根据当前方向和速度改变方向。
+#   - updateFrame: 更新当前帧，从当前宠物的帧目录中获取所有图片，并设置定时器。
+#   - updateAnimation: 更新动画，从当前宠物的帧目录中获取所有图片，并设置定时器。
+#   - showEvent: 显示事件，用于更新窗口大小。
+#   - closeEvent: 关闭事件，用于停止定时器和退出程序。
+#   - trayIconActivated: 系统托盘图标激活事件，用于处理菜单选项。
+#   - trayIconMessageClicked: 系统托盘图标消息点击事件，用于处理菜单选项。
+#   - trayIconContextMenu: 系统托盘图标右键菜单事件，用于处理菜单选项。
+#   - trayIconDoubleClicked: 系统托盘图标双击事件，用于处理菜单选项。
+#   - trayIconTriggered: 系统托盘图标触发事件，用于处理菜单选项。
+#   - trayIconMessage: 系统托盘图标消息事件，用于处理菜单选项。
+#   - trayIconAboutToShow: 系统托盘图标即将显示事件，用于处理菜单选项。
+#   - trayIconShown: 系统托盘图标显示事件，用于处理菜单选项。
+#   - trayIconHidden: 系统托盘图标隐藏事件，用于处理菜单选项。
 
 class PixelPal(QWidget):  
     def __init__(self):

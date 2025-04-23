@@ -12,7 +12,18 @@ from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import (QApplication, QWidget, QLabel, QMenu, 
                             QSystemTrayIcon, QAction, QVBoxLayout, QSlider)  # Added QSlider
 from PyQt5.QtCore import Qt
-
+# 管理器类 - 用于管理所有的像素小伴
+# 该类的作用是提供一个统一的接口，用于操作所有的像素小伴，方便其他模块调用。
+# 该类的方法包括：
+#   - init: 初始化管理器，创建一个空的像素小伴列表。    
+#   - add_pet: 添加一个像素小伴，包括名称和帧目录。
+#   - delete_pet: 删除一个像素小伴，根据名称删除。
+#   - get_all_pets: 获取所有像素小伴的信息，返回一个字典，键为名称，值为帧目录。
+#   - get_pet: 获取指定名称的像素小伴的信息，返回帧目录。
+#   - update_pet: 更新像素小伴的信息，根据名称更新帧目录。
+#   - load_pets: 从数据库加载所有像素小伴的信息。
+#   - save_pets: 保存所有像素小伴的信息到数据库。
+#   - rename_pet: 重命名像素小伴，根据名称更新帧目录。
 class PixelPalManager(QMainWindow): 
     def __init__(self, parent=None):
         super().__init__(parent)
