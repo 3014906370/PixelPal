@@ -24,7 +24,7 @@ pip install PyQt5
 3. 克隆本仓库：
 
 ```bash
-git clone URL_ADDRESSgit clone https://github.com/yourusername/PixelPal.git
+git clone https://github.com/yourusername/PixelPal.git
 ```
 4. 运行应用：
 
