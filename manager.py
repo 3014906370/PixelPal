@@ -264,6 +264,7 @@ class PixelPalManager(QMainWindow):
                     QMessageBox.warning(self, "错误", f"删除文件夹失败: {str(e)}")
                 # 从列表移除
                 self.pet_list.takeItem(self.pet_list.row(current_item))
+                main_window.initPet()  # 重新初始化以下宠物。
             shutil.rmtree(f"img/{pet_name}_frames", ignore_errors=True)
 
     def load_pets(self):
