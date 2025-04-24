@@ -19,7 +19,7 @@
 2. 安装依赖库：
 
 ```bash
-pip install PyQt5
+pip install -r requirements.txt
 ```
 3. 克隆本仓库：
 
