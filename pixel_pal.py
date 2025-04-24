@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (QApplication, QWidget, QLabel, QMenu,
 from PyQt5.QtGui import QPixmap, QMovie, QIcon  # Added QIcon to imports
 from PyQt5.QtCore import Qt, QTimer, QPoint
 from db_manager import PetDB
+import json 
 # 该类的作用是提供一个主窗口，用于显示宠物的动画。
 # 该类的方法包括：
 #   - initUI: 初始化窗口，设置窗口标题、样式、透明背景等。
@@ -22,29 +23,38 @@ from db_manager import PetDB
 #   - randomDirection: 随机改变宠物的移动方向。
 #   - movePet: 处理宠物的移动，根据当前方向和速度移动宠物。
 #   - changeDir: 改变宠物的移动方向，根据当前方向和速度改变方向。
-#   - updateFrame: 更新当前帧，从当前宠物的帧目录中获取所有图片，并设置定时器。
-#   - updateAnimation: 更新动画，从当前宠物的帧目录中获取所有图片，并设置定时器。
-#   - showEvent: 显示事件，用于更新窗口大小。
-#   - closeEvent: 关闭事件，用于停止定时器和退出程序。
-#   - trayIconActivated: 系统托盘图标激活事件，用于处理菜单选项。
-#   - trayIconMessageClicked: 系统托盘图标消息点击事件，用于处理菜单选项。
-#   - trayIconContextMenu: 系统托盘图标右键菜单事件，用于处理菜单选项。
-#   - trayIconDoubleClicked: 系统托盘图标双击事件，用于处理菜单选项。
-#   - trayIconTriggered: 系统托盘图标触发事件，用于处理菜单选项。
-#   - trayIconMessage: 系统托盘图标消息事件，用于处理菜单选项。
-#   - trayIconAboutToShow: 系统托盘图标即将显示事件，用于处理菜单选项。
-#   - trayIconShown: 系统托盘图标显示事件，用于处理菜单选项。
-#   - trayIconHidden: 系统托盘图标隐藏事件，用于处理菜单选项。
+#   - toggleTop: 切换窗口置顶状态。
+
 
 class PixelPal(QWidget):  
     def __init__(self):
         super().__init__()
         self.db = PetDB()
-        self.current_pet = None  # Initialize current_pet first
+        self.current_pet = None
+        
+        # 修改配置文件路径为工作目录下
+        config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pixelpal_config.json")
+        if not os.path.exists(config_path):
+            with open(config_path, 'w') as f:
+                json.dump({"autostart": True, "current_pet": None}, f)
+        
+        # 加载配置
+        try:
+            with open(config_path, 'r') as f:
+                config = json.load(f)
+                if config.get("current_pet"):
+                    self.current_pet = config["current_pet"]
+                # 加载固定状态
+                if config.get("is_frozen", False):
+                    self.toggleFreeze(True)  # 确保调用toggleFreeze来设置状态
+        except:
+            print(f"Failed to load config file in {config_path}")
+            
         self.initUI()
-        self.initPet()  # This will set current_pet
+        self.initPet()
         self.initTray()
-        self.initMovement()
+        if not config.get("is_frozen", False):  # 只有非固定状态才初始化移动
+            self.initMovement()
         self.initAnimation()  # Now current_pet will be available
         
     def initUI(self):
@@ -62,84 +72,7 @@ class PixelPal(QWidget):
         
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.showMenu)
-        
-    def initPet(self):
-        """重新加载宠物列表"""
-        self.pets = self.db.get_all_pets()
-        if not self.pets:
-            self._init_default_pets()
-        if not hasattr(self, 'current_pet') or self.current_pet not in self.pets:
-            self.current_pet = next(iter(self.pets))
-
-    def _init_default_pets(self):
-        default_pets = {
-            "像素小伴1": "img/pet1_frames/",
-            "像素小伴2": "img/pet2_frames/"
-        }
-        for name, path in default_pets.items():
-            os.makedirs(path, exist_ok=True)
-            self.db.add_pet(name, path)
-        self.pets = default_pets
-
-    def changePet(self, pet):
-        if pet in self.pets:
-            self.current_pet = pet
-            # 完全重置动画
-            if hasattr(self, 'animTimer'):
-                self.animTimer.stop()
-            self.initAnimation()  # 重新初始化动画
-            self.updateFrame()    # 立即更新显示
-        
-        
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.oldPos = event.globalPos()
-            
-    def mouseMoveEvent(self, event):
-        if event.buttons() == Qt.LeftButton:
-            delta = QPoint(event.globalPos() - self.oldPos)
-            self.move(self.x() + delta.x(), self.y() + delta.y())
-            self.oldPos = event.globalPos()
-    def initMovement(self):  # This method was defined but might have indentation issues
-        self.direction = QPoint(random.choice([-1, 0, 1]), random.choice([-1, 0, 1]))
-        self.speed = 2
-        
-        self.moveTimer = QTimer(self)
-        self.moveTimer.timeout.connect(self.movePet)
-        self.moveTimer.start(30)
-        
-        self.changeDirTimer = QTimer(self)
-        self.changeDirTimer.timeout.connect(self.randomDirection)
-        self.changeDirTimer.start(3000)
-
-    def movePet(self):
-        """Handle pet movement"""
-        screen = QApplication.primaryScreen().geometry()
-        new_x = self.x() + self.direction.x() * self.speed
-        new_y = self.y() + self.direction.y() * self.speed
-        
-        if new_x <= 0 or new_x >= screen.width() - self.width():
-            self.direction.setX(-self.direction.x())
-        if new_y <= 0 or new_y >= screen.height() - self.height():
-            self.direction.setY(-self.direction.y())
-            
-        self.move(new_x, new_y)
-
-    def randomDirection(self):
-        """Randomly change movement direction"""
-        self.direction = QPoint(random.choice([-1, 0, 1]), random.choice([-1, 0, 1]))
-        
-    def quitApp(self):
-            # 停止所有定时器
-            self.animTimer.stop()
-            self.moveTimer.stop()
-            self.changeDirTimer.stop()
-            # 退出应用程序
-            QApplication.quit()
-    def show_manager(self):
-        from manager import PetManager
-        self.manager = PetManager(self)
-        self.manager.show()
+    
     def showMenu(self, pos):
         menu = QMenu(self)
         menu.setStyleSheet("""
@@ -210,10 +143,78 @@ class PixelPal(QWidget):
 
         
         menu.exec_(self.mapToGlobal(pos))
+
+    def initPet(self):
+        """重新加载宠物列表"""
+        self.pets = self.db.get_all_pets()
+        if not self.pets:
+            self._init_default_pets()
+        if not hasattr(self, 'current_pet') or self.current_pet not in self.pets:
+            self.current_pet = next(iter(self.pets))
+
+    def _init_default_pets(self):
+        default_pets = {
+            "像素小伴1": "img/pet1_frames/",
+            "像素小伴2": "img/pet2_frames/"
+        }
+        for name, path in default_pets.items():
+            os.makedirs(path, exist_ok=True)
+            self.db.add_pet(name, path)
+        self.pets = default_pets
+
+    def changePet(self, pet):
+        if pet in self.pets:
+            self.current_pet = pet
+            print(self.current_pet)  # 调试输出
+            # 完全重置动画
+            if hasattr(self, 'animTimer'):
+                self.animTimer.stop()
+            self.initAnimation()  # 重新初始化动画
+            self.updateFrame()    # 立即更新显示
+        
+        
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.oldPos = event.globalPos()
+            
+    def mouseMoveEvent(self, event):
+        if event.buttons() == Qt.LeftButton:
+            delta = QPoint(event.globalPos() - self.oldPos)
+            self.move(self.x() + delta.x(), self.y() + delta.y())
+            self.oldPos = event.globalPos()
+    def initMovement(self):  # This method was defined but might have indentation issues
+        self.direction = QPoint(random.choice([-1, 0, 1]), random.choice([-1, 0, 1]))
+        self.speed = 2
+        
+        self.moveTimer = QTimer(self)
+        self.moveTimer.timeout.connect(self.movePet)
+        self.moveTimer.start(30)
+        
+        self.changeDirTimer = QTimer(self)
+        self.changeDirTimer.timeout.connect(self.randomDirection)
+        self.changeDirTimer.start(3000)
+
+    def movePet(self):
+        """Handle pet movement"""
+        screen = QApplication.primaryScreen().geometry()
+        new_x = self.x() + self.direction.x() * self.speed
+        new_y = self.y() + self.direction.y() * self.speed
+        
+        if new_x <= 0 or new_x >= screen.width() - self.width():
+            self.direction.setX(-self.direction.x())
+        if new_y <= 0 or new_y >= screen.height() - self.height():
+            self.direction.setY(-self.direction.y())
+            
+        self.move(new_x, new_y)
+
+    def randomDirection(self):
+        """Randomly change movement direction"""
+        self.direction = QPoint(random.choice([-1, 0, 1]), random.choice([-1, 0, 1]))
+        
     def initTray(self):
         self.tray = QSystemTrayIcon(self)
         self.tray.setIcon(QIcon("img/icon.png"))
-        self.tray.setToolTip("像素小伴")  # 添加这行
+        self.tray.setToolTip("像素小伴")
         self.trayMenu = QMenu()
         self.trayMenu.setStyleSheet("""
             QMenu {
@@ -236,6 +237,13 @@ class PixelPal(QWidget):
             }
         """)
         
+        # 添加开机自启动选项
+        autostartAction = QAction("开机自启动", self)
+        autostartAction.setCheckable(True)
+        autostartAction.setChecked(self.check_autostart())
+        autostartAction.triggered.connect(self.toggle_autostart)
+        self.trayMenu.addAction(autostartAction)
+        
         showAction = QAction("显示", self)
         showAction.triggered.connect(self.showNormal)
         self.trayMenu.addAction(showAction)
@@ -246,6 +254,60 @@ class PixelPal(QWidget):
         
         self.tray.setContextMenu(self.trayMenu)
         self.tray.show()
+
+    def check_autostart(self):
+        """检查是否设置了开机自启动"""
+        startup_folder = os.path.join(os.getenv('APPDATA'), 
+                                    'Microsoft\\Windows\\Start Menu\\Programs\\Startup')
+        shortcut_path = os.path.join(startup_folder, 'PixelPal.lnk')
+        return os.path.exists(shortcut_path)
+    
+    def toggle_autostart(self, checked):
+        """切换开机自启动设置"""
+        startup_folder = os.path.join(os.getenv('APPDATA'), 
+                                    'Microsoft\\Windows\\Start Menu\\Programs\\Startup')
+        shortcut_path = os.path.join(startup_folder, 'PixelPal.lnk')
+        
+        if checked:
+            # 创建快捷方式
+            import winshell
+            from win32com.client import Dispatch
+            shell = Dispatch('WScript.Shell')
+            shortcut = shell.CreateShortCut(shortcut_path)
+            shortcut.Targetpath = sys.executable
+            shortcut.WorkingDirectory = os.path.dirname(sys.executable)
+            shortcut.IconLocation = os.path.join(os.path.dirname(os.path.abspath(__file__)), "img", "icon.ico").replace("/", "\\") + ",0"
+            print("调试shortcut.IconLocation：",shortcut.IconLocation)
+            shortcut.save()
+        else:
+            # 删除快捷方式
+            try:
+                os.remove(shortcut_path)
+            except:
+                pass
+
+    def quitApp(self):
+        # 保存当前所有设置
+        config = {
+            "autostart": self.check_autostart(),
+            "current_pet": self.current_pet,
+            "is_frozen": not hasattr(self, 'moveTimer') or not self.moveTimer.isActive(),
+            "is_topmost": bool(self.windowFlags() & Qt.WindowStaysOnTopHint)
+        }
+        print("调试config：",config)  # 调试输出
+        config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pixelpal_config.json")
+        with open(config_path, 'w') as f:
+            json.dump(config, f)
+        
+        # 安全停止所有定时器
+        if hasattr(self, 'animTimer'):
+            self.animTimer.stop()
+        if hasattr(self, 'moveTimer'):
+            self.moveTimer.stop()
+        if hasattr(self, 'changeDirTimer'):
+            self.changeDirTimer.stop()
+        # 退出应用程序
+        QApplication.quit()
     def initAnimation(self):
         # 加载当前宠物的所有帧
         self.frames = []
@@ -285,13 +347,7 @@ class PixelPal(QWidget):
         else:
             self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.show()
-    def quitApp(self):
-            # 停止所有定时器
-            self.animTimer.stop()
-            self.moveTimer.stop()
-            self.changeDirTimer.stop()
-            # 退出应用程序
-            QApplication.quit()
+
     def show_manager(self):
         from manager import PixelPalManager
         self.manager = PixelPalManager(self)
@@ -306,10 +362,12 @@ class PixelPal(QWidget):
                 self.changeDirTimer.stop()
         else:
             # 恢复移动
-            if hasattr(self, 'moveTimer'):
+            if not hasattr(self, 'moveTimer'):
+                self.initMovement()  # 如果定时器不存在则重新初始化
+            else:
                 self.moveTimer.start(30)
-            if hasattr(self, 'changeDirTimer'):
-                self.changeDirTimer.start(3000)
+                if hasattr(self, 'changeDirTimer'):
+                    self.changeDirTimer.start(3000)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
