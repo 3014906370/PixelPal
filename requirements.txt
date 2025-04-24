@@ -1,0 +1,3 @@
+PyQt5==5.15.11
+pywin32==306
+winshell==0.6

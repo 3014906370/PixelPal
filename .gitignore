@@ -12,3 +12,6 @@
 !img/**/
 !img/**/*
 !main.py
+!pixelpal_config.json
+!README.md
+!requirements.txt
