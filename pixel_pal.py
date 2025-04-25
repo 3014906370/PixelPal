@@ -2,11 +2,12 @@ import sys
 import os
 import random
 from PyQt5.QtWidgets import (QApplication, QWidget, QLabel, QMenu, 
-                            QSystemTrayIcon, QAction, QVBoxLayout)
+                            QSystemTrayIcon, QAction, QVBoxLayout,QMessageBox)
 from PyQt5.QtGui import QPixmap, QMovie, QIcon  # Added QIcon to imports
 from PyQt5.QtCore import Qt, QTimer, QPoint
 from db_manager import PetDB
 import json 
+from config import CONFIG_FILE, save_config
 # 该类的作用是提供一个主窗口，用于显示宠物的动画。
 # 该类的方法包括：
 #   - initUI: 初始化窗口，设置窗口标题、样式、透明背景等。
@@ -31,29 +32,29 @@ class PixelPal(QWidget):
         super().__init__()
         self.db = PetDB()
         self.current_pet = None
-        
-        # 修改配置文件路径为工作目录下
-        config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pixelpal_config.json")
-        if not os.path.exists(config_path):
-            with open(config_path, 'w') as f:
-                json.dump({"autostart": True, "current_pet": None}, f)
-        
+        self.CONFIG_FILE = CONFIG_FILE
         # 加载配置
         try:
-            with open(config_path, 'r') as f:
-                config = json.load(f)
-                if config.get("current_pet"):
-                    self.current_pet = config["current_pet"]
+            with open(self.CONFIG_FILE, 'r') as f:
+                self.config = json.load(f)
+                if self.config.get("current_pet"):
+                    self.current_pet = self.config["current_pet"]
                 # 加载固定状态
-                if config.get("is_frozen", False):
-                    self.toggleFreeze(True)  # 确保调用toggleFreeze来设置状态
-        except:
-            print(f"Failed to load config file in {config_path}")
-            
+                if self.config.get("is_frozen", False):
+                    self.toggleFreeze(True)
+        except Exception as e:
+            print(f"Failed to load config file in {self.CONFIG_FILE}")
+            QMessageBox.warning(None, "错误", f"加载配置失败: {str(e)}")
+            self.config = {
+                "autostart": True,
+                "current_pet": None,
+                "is_frozen": False,
+                "is_topmost": True
+            }
         self.initUI()
         self.initPet()
         self.initTray()
-        if not config.get("is_frozen", False):  # 只有非固定状态才初始化移动
+        if not self.config.get("is_frozen", False):  # 只有非固定状态才初始化移动
             self.initMovement()
         self.initAnimation()  # Now current_pet will be available
         
@@ -166,6 +167,17 @@ class PixelPal(QWidget):
         if pet in self.pets:
             self.current_pet = pet
             print(self.current_pet)  # 调试输出
+
+            try:
+                with open(self.CONFIG_FILE, 'r') as f:
+                    config = json.load(f)
+                config["current_pet"] = pet
+                with open(self.CONFIG_FILE, 'w') as f:
+                    json.dump(config, f, indent=4)
+            except Exception as e:
+                print(f"保存配置失败: {str(e)}")
+                QMessageBox.warning(self, "错误", f"保存配置失败: {str(e)}")
+            
             # 完全重置动画
             if hasattr(self, 'animTimer'):
                 self.animTimer.stop()
@@ -295,8 +307,8 @@ class PixelPal(QWidget):
             "is_topmost": bool(self.windowFlags() & Qt.WindowStaysOnTopHint)
         }
         print("调试config：",config)  # 调试输出
-        config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pixelpal_config.json")
-        with open(config_path, 'w') as f:
+        
+        with open(self.CONFIG_FILE, 'w') as f:
             json.dump(config, f)
         
         # 安全停止所有定时器

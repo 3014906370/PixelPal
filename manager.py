@@ -68,6 +68,12 @@ class PixelPalManager(QMainWindow):
             QPushButton:hover {
                 background-color: #45a049;
             }
+                    QMessageBox {
+            background-color: white;
+            }
+            QMessageBox QLabel {
+                color: #333;
+            }
         """)
         
         # 主布局使用水平分割器
@@ -252,6 +258,14 @@ class PixelPalManager(QMainWindow):
         if current_item:
             pet_name = current_item.text()
             main_window = self.parent()
+            # 检查是否是当前正在使用的宠物
+            if pet_name == main_window.current_pet:
+                QMessageBox.warning(self, "警告", "无法删除正在使用的宠物，请先切换到其他宠物")
+                return
+            # 确认删除
+            reply = QMessageBox.question(self, "确认删除", f"确定要删除宠物 '{pet_name}' 吗？", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.No:
+                return
             # 先从数据库获取实际文件夹路径
             frames_dir = main_window.db.get_pet(pet_name)
             if frames_dir:
