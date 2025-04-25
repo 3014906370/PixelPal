@@ -194,9 +194,10 @@ class PixelPal(QWidget):
             delta = QPoint(event.globalPos() - self.oldPos)
             self.move(self.x() + delta.x(), self.y() + delta.y())
             self.oldPos = event.globalPos()
-    def initMovement(self):  # This method was defined but might have indentation issues
+    def initMovement(self):
         self.direction = QPoint(random.choice([-1, 0, 1]), random.choice([-1, 0, 1]))
         self.speed = 2
+        self.is_moving = True  # 添加移动状态标志
         
         self.moveTimer = QTimer(self)
         self.moveTimer.timeout.connect(self.movePet)
@@ -205,6 +206,28 @@ class PixelPal(QWidget):
         self.changeDirTimer = QTimer(self)
         self.changeDirTimer.timeout.connect(self.randomDirection)
         self.changeDirTimer.start(3000)
+        
+        # 新增随机停止计时器
+        self.stopTimer = QTimer(self)
+        self.stopTimer.timeout.connect(self.toggleMovement)
+        self.stopTimer.start(random.randint(5000, 10000))  # 5-10秒随机停止
+
+    def toggleMovement(self):
+        """随机切换移动/停止状态"""
+        if self.is_moving:
+            self.moveTimer.stop()
+            self.is_moving = False
+            # 设置下次恢复移动的时间(2-5秒)
+            QTimer.singleShot(random.randint(2000, 5000), self.resumeMovement)
+        else:
+            self.resumeMovement()
+            
+    def resumeMovement(self):
+        """恢复移动"""
+        self.moveTimer.start()
+        self.is_moving = True
+        # 设置下次停止的时间(5-10秒)
+        self.stopTimer.start(random.randint(5000, 10000))
 
     def movePet(self):
         """Handle pet movement"""
@@ -212,10 +235,15 @@ class PixelPal(QWidget):
         new_x = self.x() + self.direction.x() * self.speed
         new_y = self.y() + self.direction.y() * self.speed
         
-        if new_x <= 0 or new_x >= screen.width() - self.width():
+        # 修改边缘检测逻辑，增加缓冲区域
+        edge_buffer = 2  # 5像素的缓冲区域
+        if new_x <= edge_buffer or new_x >= screen.width() - self.width() - edge_buffer:
             self.direction.setX(-self.direction.x())
-        if new_y <= 0 or new_y >= screen.height() - self.height():
+            new_x = max(edge_buffer, min(new_x, screen.width() - self.width() - edge_buffer))
+            
+        if new_y <= edge_buffer or new_y >= screen.height() - self.height() - edge_buffer:
             self.direction.setY(-self.direction.y())
+            new_y = max(edge_buffer, min(new_y, screen.height() - self.height() - edge_buffer))
             
         self.move(new_x, new_y)
 
