@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QMessageBox
 import sys
 import os
 import json
-
+# 配置工具函数
 def get_config_path():
     """获取正确的配置文件路径，兼容打包和开发模式"""
     if getattr(sys, 'frozen', False):

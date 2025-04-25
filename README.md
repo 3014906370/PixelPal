@@ -63,6 +63,7 @@ python main.py
 - `pixel_pet.py`：像素宠物类定义
 - `manager.py`：管理工具类定义
 - `db_manager.py`：数据库管理类定义
+- `config.py`：配置函数定义
 - `pets.db`：数据库
 - `img/`：图标文件
 
