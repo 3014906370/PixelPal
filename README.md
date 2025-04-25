@@ -78,4 +78,4 @@ MIT License
 如有问题，请提交GitHub Issues或联系开发者邮箱
 
 - 邮箱： 3014906370@qq.com
-- GitHub Issues： https://github.com/3014906370/PixelPal/issues
+- GitHub Issues： https://github.com/LispTex-f/PixelPal/issues
