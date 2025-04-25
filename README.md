@@ -54,7 +54,7 @@ python main.py
 
 ### 方法二：安装包安装
 
-1. 下载 `像素小伴_Setup.exe`
+1. 下载 `PixelPal_Setup.exe`
 
 ## 🏗️ 项目结构
 
