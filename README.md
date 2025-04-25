@@ -43,7 +43,7 @@ pip install -r requirements.txt
 3. 克隆本仓库：
 
 ```bash
-git clone https://github.com/3014906370/PixelPal.git
+git clone https://github.com/LispTex-f/PixelPal.git
 ```
 
 4. 运行应用：
