@@ -54,7 +54,8 @@ python main.py
 
 ### 方法二：安装包安装
 
-1. 下载 `PixelPal_Setup.exe`
+1. 蓝奏下载 `PixelPal_Setup.exe`：https://www.ilanzou.com/s/4nrZYScM
+2. GitHub release中下载`PixelPal_Setup.exe`：
 
 ## 🏗️ 项目结构
 
