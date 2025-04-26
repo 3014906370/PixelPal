@@ -1,14 +1,14 @@
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox,QApplication
 import sys
 import os
 import json
-# 配置工具函数
+
 def get_config_path():
-    """获取正确的配置文件路径，兼容打包和开发模式"""
-    if getattr(sys, 'frozen', False):
-        return os.path.join(os.path.dirname(sys.executable), "pixelpal_config.json")
-    else:
-        return os.path.join(os.path.dirname(os.path.abspath(__file__)), "pixelpal_config.json")
+    # 使用AppData目录存储配置文件
+    appdata_dir = os.getenv('APPDATA')
+    config_dir = os.path.join(appdata_dir, 'PixelPal')
+    os.makedirs(config_dir, exist_ok=True)
+    return os.path.join(config_dir, 'pixelpal_config.json')
 
 CONFIG_FILE = get_config_path()
 
@@ -17,7 +17,6 @@ def load_config():
         with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
             return json.load(f)
     except Exception as e:
-        QMessageBox.warning(None, "错误", f"加载配置失败: {str(e)}")
         return {
             "autostart": True, 
             "current_pet": None,
@@ -25,9 +24,12 @@ def load_config():
             "is_topmost": True
         }
 
+CONFIG = load_config()
+
 def save_config(config):
     try:
         with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
             json.dump(config, f, ensure_ascii=False, indent=4)
+        print(f"配置已保存在{CONFIG_FILE}")
     except Exception as e:
-        QMessageBox.warning(None, "错误", f"保存配置失败: {str(e)}")
+        print(f"保存配置失败: {str(e)}")

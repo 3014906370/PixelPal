@@ -68,7 +68,7 @@ class PixelPalManager(QMainWindow):
             QPushButton:hover {
                 background-color: #45a049;
             }
-                    QMessageBox {
+            QMessageBox {
             background-color: white;
             }
             QMessageBox QLabel {

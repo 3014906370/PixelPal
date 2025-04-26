@@ -7,7 +7,7 @@ from PyQt5.QtGui import QPixmap, QMovie, QIcon  # Added QIcon to imports
 from PyQt5.QtCore import Qt, QTimer, QPoint
 from db_manager import PetDB
 import json 
-from config import CONFIG_FILE, save_config
+from config import CONFIG, save_config
 # 该类的作用是提供一个主窗口，用于显示宠物的动画。
 # 该类的方法包括：
 #   - initUI: 初始化窗口，设置窗口标题、样式、透明背景等。
@@ -32,29 +32,11 @@ class PixelPal(QWidget):
         super().__init__()
         self.db = PetDB()
         self.current_pet = None
-        self.CONFIG_FILE = CONFIG_FILE
-        # 加载配置
-        try:
-            with open(self.CONFIG_FILE, 'r') as f:
-                self.config = json.load(f)
-                if self.config.get("current_pet"):
-                    self.current_pet = self.config["current_pet"]
-                # 加载固定状态
-                if self.config.get("is_frozen", False):
-                    self.toggleFreeze(True)
-        except Exception as e:
-            print(f"Failed to load config file in {self.CONFIG_FILE}")
-            QMessageBox.warning(None, "错误", f"加载配置失败: {str(e)}")
-            self.config = {
-                "autostart": True,
-                "current_pet": None,
-                "is_frozen": False,
-                "is_topmost": True
-            }
+        self.CONFIG = CONFIG
         self.initUI()
         self.initPet()
         self.initTray()
-        if not self.config.get("is_frozen", False):  # 只有非固定状态才初始化移动
+        if not self.CONFIG.get("is_frozen", False):  # 只有非固定状态才初始化移动
             self.initMovement()
         self.initAnimation()  # Now current_pet will be available
         
@@ -167,17 +149,9 @@ class PixelPal(QWidget):
         if pet in self.pets:
             self.current_pet = pet
             print(self.current_pet)  # 调试输出
-
-            try:
-                with open(self.CONFIG_FILE, 'r') as f:
-                    config = json.load(f)
-                config["current_pet"] = pet
-                with open(self.CONFIG_FILE, 'w') as f:
-                    json.dump(config, f, indent=4)
-            except Exception as e:
-                print(f"保存配置失败: {str(e)}")
-                QMessageBox.warning(self, "错误", f"保存配置失败: {str(e)}")
-            
+            #保存配置文件
+            self.CONFIG["current_pet"] = pet
+            save_config(self.CONFIG)
             # 完全重置动画
             if hasattr(self, 'animTimer'):
                 self.animTimer.stop()
@@ -334,11 +308,9 @@ class PixelPal(QWidget):
             "is_frozen": not hasattr(self, 'moveTimer') or not self.moveTimer.isActive(),
             "is_topmost": bool(self.windowFlags() & Qt.WindowStaysOnTopHint)
         }
+        self.CONFIG.update(config)
         print("调试config：",config)  # 调试输出
-        
-        with open(self.CONFIG_FILE, 'w') as f:
-            json.dump(config, f)
-        
+        save_config(self.CONFIG)
         # 安全停止所有定时器
         if hasattr(self, 'animTimer'):
             self.animTimer.stop()
@@ -346,8 +318,12 @@ class PixelPal(QWidget):
             self.moveTimer.stop()
         if hasattr(self, 'changeDirTimer'):
             self.changeDirTimer.stop()
+        # 关闭托盘图标
+        if hasattr(self, 'tray'):
+            self.tray.hide()
         # 退出应用程序
         QApplication.quit()
+
     def initAnimation(self):
         # 加载当前宠物的所有帧
         self.frames = []
